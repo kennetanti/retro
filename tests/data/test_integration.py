@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from retro.testing import game, handle
 import retro.testing.tools
 
@@ -14,7 +15,7 @@ def test_scenario(game):
 
 def test_missing():
     missing = retro.testing.tools.scan_missing()
-    handle([(game, 'missing %s' % file) for (game, file) in missing], [])
+    handle([(game, u'missing %s' % file) for (game, file) in missing], [])
 
 
 def test_default_states(game):

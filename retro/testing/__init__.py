@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import pytest
 import retro.data
 import os
@@ -19,27 +20,27 @@ for g in games:
     if os.path.exists(
             os.path.join(retro.data.path(),
                          *retro.data.Integrations.EXPERIMENTAL_ONLY.paths, g)):
-        all_games.append(g + '-exp')
+        all_games.append(g + u'-exp')
         overlays += 1
     if os.path.exists(
             os.path.join(retro.data.path(),
                          *retro.data.Integrations.CONTRIB_ONLY.paths, g)):
-        all_games.append(g + '-contrib')
+        all_games.append(g + u'-contrib')
         overlays += 1
     if overlays > 1:
-        all_games.append(g + '-all')
+        all_games.append(g + u'-all')
 
 inttypes = {
-    'exp': retro.data.Integrations.EXPERIMENTAL_ONLY,
-    'contrib': retro.data.Integrations.CONTRIB_ONLY,
-    'all': retro.data.Integrations.ALL,
+    u'exp': retro.data.Integrations.EXPERIMENTAL_ONLY,
+    u'contrib': retro.data.Integrations.CONTRIB_ONLY,
+    u'all': retro.data.Integrations.ALL,
 }
 
 
-@pytest.fixture(params=[g.replace('-', '_') for g in all_games])
+@pytest.fixture(params=[g.replace(u'-', u'_') for g in all_games])
 def game(request):
-    game = request.param.split('_')
-    return '%s-%s' % (game[0], game[1]), inttypes[
+    game = request.param.split(u'_')
+    return u'%s-%s' % (game[0], game[1]), inttypes[
         game[2]] if len(game) > 2 else retro.data.Integrations.STABLE
 
 
@@ -50,7 +51,7 @@ def error(test, info):
 
 def warn(test, info):
     global warnings
-    w.warn('%s: %s' % (test, info))
+    w.warn(u'%s: %s' % (test, info))
     warnings.append((test, info))
 
 
@@ -62,29 +63,28 @@ def handle(warnings, errors):
     assert not errors
 
 
-def branch_new(upstream='master', downstream=None):
+def branch_new(upstream=u'master', downstream=None):
     branches = [upstream]
     if downstream:
         branches.append(downstream)
     try:
-        diffs = subprocess.check_output(['git', 'diff', '--name-only'] +
-                                        branches).decode('utf-8')
+        diffs = subprocess.check_output([u'git', u'diff', u'--name-only'] +
+                                        branches).decode(u'utf-8')
     except subprocess.CalledProcessError:
         return []
-    check = {
-        name.split('/')[0].replace('-', '_')
-        for name in diffs.splitlines() if '-' in name
-    }
+    check = set(
+        name.split(u'/')[0].replace(u'-', u'_')
+        for name in diffs.splitlines() if u'-' in name)
     return list(check)
 
 
 @pytest.yield_fixture(params=[
     os.path.splitext(g)[0] for g in os.listdir(
-        os.path.join(os.path.dirname(__file__), '../../tests/roms'))
+        os.path.join(os.path.dirname(__file__), u'../../tests/roms'))
 ])
 def testenv(request):
     import retro.data
-    path = os.path.join(os.path.dirname(__file__), '../../tests/roms')
+    path = os.path.join(os.path.dirname(__file__), u'../../tests/roms')
 
     get_file_path = retro.data.get_file_path
     get_romfile_path = retro.data.get_romfile_path

@@ -1,3 +1,5 @@
+from __future__ import with_statement
+from __future__ import absolute_import
 import gc
 import gym
 import gzip
@@ -10,21 +12,22 @@ import retro.data
 from gym.utils import seeding
 
 from retro.data import list_games, list_states
+from io import open
 
-gym_version = tuple(int(x) for x in gym.__version__.split('.'))
+gym_version = tuple(int(x) for x in gym.__version__.split(u'.'))
 
-__all__ = ['RetroEnv']
+__all__ = [u'RetroEnv']
 
 
 class RetroEnv(gym.Env):
     metadata = {
-        'render.modes': ['human', 'rgb_array'],
-        'video.frames_per_second': 60.0
+        u'render.modes': [u'human', u'rgb_array'],
+        u'video.frames_per_second': 60.0
     }
 
     def compute_step(self):
         if self.players > 1:
-            reward = [self.data.current_reward(p) for p in range(self.players)]
+            reward = [self.data.current_reward(p) for p in xrange(self.players)]
         else:
             reward = self.data.current_reward()
         done = self.data.is_done()
@@ -45,7 +48,7 @@ class RetroEnv(gym.Env):
 
     def auto_record(self, path=None):
         if not path:
-            path = os.getcwd()
+            path = os.getcwdu()
         self.movie_path = path
 
     def __init__(self,
@@ -57,7 +60,7 @@ class RetroEnv(gym.Env):
                  record=False,
                  players=1,
                  inttype=retro.data.Integrations.STABLE):
-        if not hasattr(self, 'spec'):
+        if not hasattr(self, u'spec'):
             self.spec = None
         self.img = None
         self.viewer = None
@@ -68,7 +71,7 @@ class RetroEnv(gym.Env):
 
         metadata = {}
         rom_path = retro.data.get_romfile_path(game, inttype)
-        metadata_path = retro.data.get_file_path(game, 'metadata.json',
+        metadata_path = retro.data.get_file_path(game, u'metadata.json',
                                                  inttype)
 
         if state == retro.State.NONE:
@@ -78,12 +81,12 @@ class RetroEnv(gym.Env):
             try:
                 with open(metadata_path) as f:
                     metadata = json.load(f)
-                if 'default_player_state' in metadata and self.players <= len(
-                        metadata['default_player_state']):
-                    self.statename = metadata['default_player_state'][
+                if u'default_player_state' in metadata and self.players <= len(
+                        metadata[u'default_player_state']):
+                    self.statename = metadata[u'default_player_state'][
                         self.players - 1]
-                elif 'default_state' in metadata:
-                    self.statename = metadata['default_state']
+                elif u'default_state' in metadata:
+                    self.statename = metadata[u'default_state']
                 else:
                     self.statename = None
             except (IOError, json.JSONDecodeError):
@@ -95,22 +98,22 @@ class RetroEnv(gym.Env):
         self.data = retro.data.GameData()
 
         if info is None:
-            info = 'data'
+            info = u'data'
 
-        if info.endswith('.json'):
+        if info.endswith(u'.json'):
             # assume it's a path
             info_path = info
         else:
-            info_path = retro.data.get_file_path(game, info + '.json', inttype)
+            info_path = retro.data.get_file_path(game, info + u'.json', inttype)
 
         if scenario is None:
-            scenario = 'scenario'
+            scenario = u'scenario'
 
-        if scenario.endswith('.json'):
+        if scenario.endswith(u'.json'):
             # assume it's a path
             scenario_path = scenario
         else:
-            scenario_path = retro.data.get_file_path(game, scenario + '.json',
+            scenario_path = retro.data.get_file_path(game, scenario + u'.json',
                                                      inttype)
 
         self.system = retro.get_romfile_system(rom_path)
@@ -123,20 +126,20 @@ class RetroEnv(gym.Env):
         self.em.step()
 
         core = retro.get_system_info(self.system)
-        self.buttons = core['buttons']
+        self.buttons = core[u'buttons']
         self.num_buttons = len(self.buttons)
         self.button_combos = self.data.valid_actions()
 
         try:
             assert self.data.load(
                 info_path,
-                scenario_path), 'Failed to load info (%s) or scenario (%s)' % (
+                scenario_path), u'Failed to load info (%s) or scenario (%s)' % (
                     info_path, scenario_path)
         except Exception:
             del self.em
             raise
 
-        img = [self.get_screen(p) for p in range(players)]
+        img = [self.get_screen(p) for p in xrange(players)]
 
         if use_restricted_actions == retro.Actions.DISCRETE:
             combos = 1
@@ -154,7 +157,7 @@ class RetroEnv(gym.Env):
 
         kwargs = {}
         if gym_version >= (0, 9, 6):
-            kwargs['dtype'] = np.uint8
+            kwargs[u'dtype'] = np.uint8
         self.observation_space = gym.spaces.Box(
             low=0, high=255, shape=img[0].shape, **kwargs)
 
@@ -176,7 +179,7 @@ class RetroEnv(gym.Env):
 
     def action_to_array(self, a):
         actions = []
-        for p in range(self.players):
+        for p in xrange(self.players):
             action = 0
             if self.use_restricted_actions == retro.Actions.DISCRETE:
                 for combo in self.button_combos:
@@ -185,28 +188,28 @@ class RetroEnv(gym.Env):
                     action |= combo[current]
             elif self.use_restricted_actions == retro.Actions.MULTI_DISCRETE:
                 ap = a[self.num_buttons * p:self.num_buttons * (p + 1)]
-                for i in range(len(ap)):
+                for i in xrange(len(ap)):
                     buttons = self.button_combos[i]
                     action |= buttons[ap[i]]
             else:
                 ap = a[self.num_buttons * p:self.num_buttons * (p + 1)]
-                for i in range(len(ap)):
+                for i in xrange(len(ap)):
                     action |= int(ap[i]) << i
                 if self.use_restricted_actions == retro.Actions.FILTERED:
                     action = self.data.filter_action(action)
             ap = np.zeros([self.num_buttons], np.uint8)
-            for i in range(self.num_buttons):
+            for i in xrange(self.num_buttons):
                 ap[i] = (action >> i) & 1
             actions.append(ap)
         return actions
 
     def step(self, a):
         if self.img is None:
-            raise RuntimeError('Please call env.reset() before env.step()')
+            raise RuntimeError(u'Please call env.reset() before env.step()')
 
         for p, ap in enumerate(self.action_to_array(a)):
             if self.movie:
-                for i in range(self.num_buttons):
+                for i in xrange(self.num_buttons):
                     self.movie.set_key(i, ap[i], p)
             self.em.set_button_mask(ap, p)
 
@@ -221,7 +224,7 @@ class RetroEnv(gym.Env):
     def reset(self):
         if self.initial_state:
             self.em.set_state(self.initial_state)
-        for p in range(self.players):
+        for p in xrange(self.players):
             self.em.set_button_mask(np.zeros([self.num_buttons], np.uint8), p)
         self.em.step()
         if self.movie_path is not None:
@@ -229,7 +232,7 @@ class RetroEnv(gym.Env):
                 self.statename))[0]
             self.record_movie(
                 os.path.join(
-                    self.movie_path, '%s-%s-%06d.bk2' %
+                    self.movie_path, u'%s-%s-%06d.bk2' %
                     (self.gamename, rel_statename, self.movie_id)))
             self.movie_id += 1
         if self.movie:
@@ -247,14 +250,14 @@ class RetroEnv(gym.Env):
         seed2 = seeding.hash_seed(seed1 + 1) % 2**31
         return [seed1, seed2]
 
-    def render(self, mode='human', close=False):
+    def render(self, mode=u'human', close=False):
         if close:
             if self.viewer:
                 self.viewer.close()
             return
-        if mode == "rgb_array":
+        if mode == u"rgb_array":
             return self.get_screen() if self.img is None else self.img
-        elif mode == "human":
+        elif mode == u"human":
             if self.viewer is None:
                 from gym.envs.classic_control.rendering import SimpleImageViewer
                 self.viewer = SimpleImageViewer()
@@ -262,7 +265,7 @@ class RetroEnv(gym.Env):
             return self.viewer.isopen
 
     def close(self):
-        if hasattr(self, 'em'):
+        if hasattr(self, u'em'):
             del self.em
 
     def get_action_meaning(self, act):
@@ -292,12 +295,12 @@ class RetroEnv(gym.Env):
         return img[y:h, x:w]
 
     def load_state(self, statename, inttype=retro.data.Integrations.DEFAULT):
-        if not statename.endswith('.state'):
-            statename += '.state'
+        if not statename.endswith(u'.state'):
+            statename += u'.state'
 
         with gzip.open(
                 retro.data.get_file_path(self.gamename, statename, inttype),
-                'rb') as fh:
+                u'rb') as fh:
             self.initial_state = fh.read()
 
         self.statename = statename

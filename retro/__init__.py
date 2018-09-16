@@ -1,14 +1,17 @@
+from __future__ import with_statement
+from __future__ import absolute_import
 import os
 import retro.data
 import sys
 
 from enum import Enum
 from retro._retro import Movie, RetroEmulator, core_path
+from io import open
 
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
-core_path(os.path.join(os.path.dirname(__file__), 'cores'))
+core_path(os.path.join(os.path.dirname(__file__), u'cores'))
 
-for path in ('VERSION.txt', '../VERSION'):
+for path in (u'VERSION.txt', u'../VERSION'):
     try:
         with open(os.path.join(os.path.dirname(__file__), path)) as f:
             __version__ = f.read()
@@ -17,8 +20,8 @@ for path in ('VERSION.txt', '../VERSION'):
         pass
 
 __all__ = [
-    'Movie', 'RetroEmulator', 'Actions', 'State', 'get_core_path',
-    'get_romfile_system', 'get_system_info', 'make'
+    u'Movie', u'RetroEmulator', u'Actions', u'State', u'get_core_path',
+    u'get_romfile_system', u'get_system_info', u'make'
 ]
 
 retro.data.init_core_info(core_path())
@@ -45,14 +48,14 @@ def get_romfile_system(rom_path):
     if extension in retro.data.EMU_EXTENSIONS:
         return retro.data.EMU_EXTENSIONS[extension]
     else:
-        raise Exception("Unsupported rom type at path: {}".format(rom_path))
+        raise Exception(u"Unsupported rom type at path: {}".format(rom_path))
 
 
 def get_system_info(system):
     if system in retro.data.EMU_INFO:
         return retro.data.EMU_INFO[system]
     else:
-        raise KeyError("Unsupported system type: {}".format(system))
+        raise KeyError(u"Unsupported system type: {}".format(system))
 
 
 def make(game,
@@ -63,10 +66,10 @@ def make(game,
     try:
         retro.data.get_romfile_path(game, inttype)
     except FileNotFoundError:
-        if not retro.data.get_file_path(game, "rom.sha", inttype):
+        if not retro.data.get_file_path(game, u"rom.sha", inttype):
             raise
         else:
             raise FileNotFoundError(
-                'Game not found: %s. Did you make sure to import the ROM?' %
+                u'Game not found: %s. Did you make sure to import the ROM?' %
                 game)
     return RetroEnv(game, state, inttype=inttype, **kwargs)

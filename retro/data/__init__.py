@@ -1,9 +1,13 @@
+from __future__ import division
+from __future__ import with_statement
+from __future__ import absolute_import
 from retro._retro import GameDataGlue, RetroEmulator, data_path as _data_path
 import glob
 import hashlib
 import json
 import os
 import sys
+from io import open
 
 try:
     import enum
@@ -27,19 +31,19 @@ except ImportError:
 
 
 __all__ = [
-    'GameData', 'Integrations', 'add_integrations', 'add_custom_integration',
-    'path', 'get_file_path', 'get_romfile_path', 'list_games', 'list_states',
-    'merge'
+    u'GameData', u'Integrations', u'add_integrations', u'add_custom_integration',
+    u'path', u'get_file_path', u'get_romfile_path', u'list_games', u'list_states',
+    u'merge'
 ]
 
-if sys.platform.startswith('linux'):
-    EXT = 'so'
-elif sys.platform == 'darwin':
-    EXT = 'dylib'
-elif sys.platform == 'win32':
-    EXT = 'dll'
+if sys.platform.startswith(u'linux'):
+    EXT = u'so'
+elif sys.platform == u'darwin':
+    EXT = u'dylib'
+elif sys.platform == u'win32':
+    EXT = u'dll'
 else:
-    raise RuntimeError('Unrecognized platform')
+    raise RuntimeError(u'Unrecognized platform')
 
 DATA_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
@@ -48,10 +52,10 @@ EMU_INFO = {}
 EMU_EXTENSIONS = {}
 
 
-class DefaultIntegrations:
+class DefaultIntegrations(object):
     @classmethod
     def _init(cls):
-        if not hasattr(cls, 'DEFAULT'):
+        if not hasattr(cls, u'DEFAULT'):
             cls.reset()
 
     def __or__(self, b):
@@ -91,21 +95,21 @@ class Integrations(Flag):
 
     @classmethod
     def _init(cls):
-        if not hasattr(cls, 'CUSTOM_PATHS'):
+        if not hasattr(cls, u'CUSTOM_PATHS'):
             cls.CUSTOM_PATHS = []
 
     @property
     def paths(self):
         p = []
         if self & self.CONTRIB_ONLY:
-            p.append(str(self.CONTRIB_ONLY))
+            p.append(unicode(self.CONTRIB_ONLY))
         if self & self.EXPERIMENTAL_ONLY:
-            p.append(str(self.EXPERIMENTAL_ONLY))
+            p.append(unicode(self.EXPERIMENTAL_ONLY))
         if self & self.CUSTOM_ONLY:
             Integrations._init()
             p.extend(self.CUSTOM_PATHS)
         if self & self.STABLE:
-            p.append('stable')
+            p.append(u'stable')
         return p
 
     @classmethod
@@ -120,19 +124,19 @@ class Integrations(Flag):
 
     def __str__(self):
         if self == self.ALL:
-            return 'all'
+            return u'all'
         if self == self.STABLE:
-            return ''
+            return u''
         names = []
         if self & self.STABLE:
-            names.append('stable')
+            names.append(u'stable')
         if self & self.CONTRIB_ONLY:
-            names.append('contrib')
+            names.append(u'contrib')
         if self & self.EXPERIMENTAL_ONLY:
-            names.append('experimental')
+            names.append(u'experimental')
         if self & self.CUSTOM_ONLY:
-            names.append('custom')
-        return '|'.join(names)
+            names.append(u'custom')
+        return u'|'.join(names)
 
 
 class GameData(GameDataGlue):
@@ -144,17 +148,17 @@ class GameData(GameDataGlue):
         super(GameData, self).__init__()
         if game:
             if not data:
-                data = get_file_path(game, 'data.json', inttype)
-            if not data.endswith('.json'):
-                data += '.json'
+                data = get_file_path(game, u'data.json', inttype)
+            if not data.endswith(u'.json'):
+                data += u'.json'
 
             if not os.path.isabs(data):
                 data = get_file_path(game, data, inttype)
 
             if not scenario:
-                scenario = get_file_path(game, 'scenario.json', inttype)
-            if not scenario.endswith('.json'):
-                scenario += '.json'
+                scenario = get_file_path(game, u'scenario.json', inttype)
+            if not scenario.endswith(u'.json'):
+                scenario += u'.json'
 
             if not os.path.isabs(scenario):
                 scenario = get_file_path(game, scenario, inttype)
@@ -254,27 +258,27 @@ def add_custom_integration(path):
 
 
 def init_core_info(path):
-    for fname in glob.glob(os.path.join(path, '*.json')):
+    for fname in glob.glob(os.path.join(path, u'*.json')):
         with open(fname) as f:
             core_info = f.read()
             RetroEmulator.load_core_info(core_info)
             EMU_INFO.update(json.loads(core_info))
             for platform, core in EMU_INFO.items():
-                EMU_CORES[platform] = core['lib'] + '_libretro.' + EXT
-                for ext in core['ext']:
-                    EMU_EXTENSIONS['.' + ext] = platform
+                EMU_CORES[platform] = core[u'lib'] + u'_libretro.' + EXT
+                for ext in core[u'ext']:
+                    EMU_EXTENSIONS[u'.' + ext] = platform
 
 
 def path(hint=DATA_PATH):
     if hint == DATA_PATH and not os.path.exists(
-            os.path.join(DATA_PATH, 'data', 'stable', 'Airstriker-Genesis')):
+            os.path.join(DATA_PATH, u'data', u'stable', u'Airstriker-Genesis')):
         # Development installation
-        hint = os.path.join(hint, '..')
+        hint = os.path.join(hint, u'..')
     return _data_path(hint)
 
 
 def get_file_path(game, file, inttype=Integrations.DEFAULT):
-    """
+    u"""
     Return the path to a given game's directory
     """
     base = path()
@@ -287,15 +291,15 @@ def get_file_path(game, file, inttype=Integrations.DEFAULT):
 
 
 def get_romfile_path(game, inttype=Integrations.DEFAULT):
-    """
+    u"""
     Return the path to a given game's romfile
     """
     for extension in EMU_EXTENSIONS.keys():
-        possible_path = get_file_path(game, "rom" + extension, inttype)
+        possible_path = get_file_path(game, u"rom" + extension, inttype)
         if possible_path:
             return possible_path
 
-    raise FileNotFoundError("No romfiles found for game: %s" % game)
+    raise FileNotFoundError(u"No romfiles found for game: %s" % game)
 
 
 def list_games(inttype=Integrations.DEFAULT):
@@ -304,7 +308,7 @@ def list_games(inttype=Integrations.DEFAULT):
         files.extend(os.listdir(os.path.join(path(), curpath)))
     possible_games = []
     for file in files:
-        if get_file_path(file, "rom.sha", inttype):
+        if get_file_path(file, u"rom.sha", inttype):
             possible_games.append(file)
     return sorted(set(possible_games))
 
@@ -315,11 +319,11 @@ def list_states(game, inttype=Integrations.DEFAULT):
         paths.append(os.path.join(path(), curpath, game))
     states = []
     for curpath in paths:
-        local_states = glob.glob(os.path.join(curpath, "*.state"))
+        local_states = glob.glob(os.path.join(curpath, u"*.state"))
         states.extend(
-            os.path.split(local_state)[-1][:-len(".state")]
+            os.path.split(local_state)[-1][:-len(u".state")]
             for local_state in local_states
-            if not os.path.split(local_state)[-1].startswith("_"))
+            if not os.path.split(local_state)[-1].startswith(u"_"))
     return sorted(set(states))
 
 
@@ -329,32 +333,32 @@ def list_scenarios(game, inttype=Integrations.DEFAULT):
         paths.append(os.path.join(path(), curpath, game))
     scens = []
     for curpath in paths:
-        local_json = glob.glob(os.path.join(curpath, "*.json"))
+        local_json = glob.glob(os.path.join(curpath, u"*.json"))
         for j in local_json:
             try:
                 with open(j) as f:
                     scen = json.load(f)
             except (json.JSONDecodeError, IOError):
                 continue
-            if scen.get('reward') is not None or scen.get(
-                    'rewards') is not None or scen.get('done') is not None:
-                scens.append(os.path.split(j)[-1][:-len(".json")])
+            if scen.get(u'reward') is not None or scen.get(
+                    u'rewards') is not None or scen.get(u'done') is not None:
+                scens.append(os.path.split(j)[-1][:-len(u".json")])
     return sorted(set(scens))
 
 
 def parse_smd(header, body):
     import numpy as np
     try:
-        if body[0x80] != b'E' or body[0x81] != b'A':
+        if body[0x80] != 'E' or body[0x81] != 'A':
             return header + body
-        body2 = b''
-        for i in range(len(body) / 0x4000):
+        body2 = ''
+        for i in xrange(len(body) / 0x4000):
             block = body[i * 0x4000:(i + 1) * 0x4000]
             if not block:
                 break
             nb = np.fromstring(block, dtype=np.uint8)
             nb = np.flipud(nb.reshape(2, 0x2000))
-            nb = nb.flatten(order='F')
+            nb = nb.flatten(order=u'F')
             body2 += nb.tostring()
     except IndexError:
         return header + body
@@ -362,13 +366,13 @@ def parse_smd(header, body):
 
 
 def groom_rom(rom):
-    with open(rom, 'rb') as r:
-        if rom.lower().endswith('.smd'):
+    with open(rom, u'rb') as r:
+        if rom.lower().endswith(u'.smd'):
             # Read Super Magic Drive header
             header = r.read(512)
             body = r.read()
             body = parse_smd(header, body)
-        elif rom.lower().endswith('.nes'):
+        elif rom.lower().endswith(u'.nes'):
             header = r.read(16)
             body = r.read()
             return header + body, hashlib.sha1(body).hexdigest()
@@ -376,7 +380,7 @@ def groom_rom(rom):
             # Don't read more than 32 MiB, the largest game supported
             body = r.read(0x2000000)
             if r.read(1):
-                raise ValueError('ROM is too big')
+                raise ValueError(u'ROM is too big')
     return body, hashlib.sha1(body).hexdigest()
 
 
@@ -388,33 +392,35 @@ def verify_hash(game, inttype=Integrations.DEFAULT):
     with open(
             retro.data.get_file_path(
                 game,
-                'rom.sha',
+                u'rom.sha',
                 inttype=inttype | retro.data.Integrations.STABLE)) as f:
-        expected_shas = f.read().strip().split('\n')
-    with open(rom, 'rb') as f:
-        if system == 'Nes':
+        expected_shas = f.read().strip().split(u'\n')
+    with open(rom, u'rb') as f:
+        if system == u'Nes':
             # Chop off header for checksum
             f.read(16)
         real_sha = hashlib.sha1(f.read()).hexdigest()
     if real_sha not in expected_shas:
-        errors.append((game, 'sha mismatch'))
+        errors.append((game, u'sha mismatch'))
     return errors
 
 
-def merge(*args, quiet=True):
+def merge(*args, **_3to2kwargs):
+    if 'quiet' in _3to2kwargs: quiet = _3to2kwargs['quiet']; del _3to2kwargs['quiet']
+    else: quiet = True
     import retro
     known_hashes = {}
     imported_games = 0
     for game in list_games(Integrations.ALL):
         for curpath in Integrations.ALL.paths:
-            shafile = os.path.join(path(), curpath, game, 'rom.sha')
+            shafile = os.path.join(path(), curpath, game, u'rom.sha')
             try:
                 with open(shafile) as f:
-                    shas = f.read().strip().split('\n')
+                    shas = f.read().strip().split(u'\n')
             except (FileNotFoundError, ValueError):
                 continue
             for ext, platform in EMU_EXTENSIONS.items():
-                if game.endswith('-' + platform):
+                if game.endswith(u'-' + platform):
                     break
             for sha in shas:
                 known_hashes[sha] = (game, ext, os.path.join(path(), curpath))
@@ -426,9 +432,9 @@ def merge(*args, quiet=True):
         if hash in known_hashes:
             game, ext, curpath = known_hashes[hash]
             if not quiet:
-                print('Importing', game)
-            with open(os.path.join(curpath, game, 'rom%s' % ext), 'wb') as f:
+                print u'Importing', game
+            with open(os.path.join(curpath, game, u'rom%s' % ext), u'wb') as f:
                 f.write(data)
             imported_games += 1
     if not quiet:
-        print('Imported %i games' % imported_games)
+        print u'Imported %i games' % imported_games

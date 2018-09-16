@@ -1,39 +1,40 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import
 import argparse
 import retro
 
 parser = argparse.ArgumentParser()
-parser.add_argument('game', help='the name or path for the game to run')
+parser.add_argument(u'game', help=u'the name or path for the game to run')
 parser.add_argument(
-    'state',
-    nargs='?',
-    help='the initial state file to load, minus the extension')
+    u'state',
+    nargs=u'?',
+    help=u'the initial state file to load, minus the extension')
 parser.add_argument(
-    '--scenario',
-    '-s',
-    default='scenario',
-    help='the scenario file to load, minus the extension')
+    u'--scenario',
+    u'-s',
+    default=u'scenario',
+    help=u'the scenario file to load, minus the extension')
 parser.add_argument(
-    '--record', '-r', action='store_true', help='record bk2 movies')
+    u'--record', u'-r', action=u'store_true', help=u'record bk2 movies')
 parser.add_argument(
-    '--verbose',
-    '-v',
-    action='count',
+    u'--verbose',
+    u'-v',
+    action=u'count',
     default=1,
-    help='increase verbosity (can be specified multiple times)')
+    help=u'increase verbosity (can be specified multiple times)')
 parser.add_argument(
-    '--quiet',
-    '-q',
-    action='count',
+    u'--quiet',
+    u'-q',
+    action=u'count',
     default=0,
-    help='decrease verbosity (can be specified multiple times)')
+    help=u'decrease verbosity (can be specified multiple times)')
 parser.add_argument(
-    '--players',
-    '-p',
+    u'--players',
+    u'-p',
     type=int,
     default=1,
-    help='number of players/agents (default: 1)')
+    help=u'number of players/agents (default: 1)')
 args = parser.parse_args()
 
 env = retro.make(
@@ -54,11 +55,11 @@ try:
             t += 1
             if t % 10 == 0:
                 if verbosity > 1:
-                    infostr = ''
+                    infostr = u''
                     if info:
-                        infostr = ', info: ' + ', '.join(
-                            ['%s=%i' % (k, v) for k, v in info.items()])
-                    print(('t=%i' % t) + infostr)
+                        infostr = u', info: ' + u', '.join(
+                            [u'%s=%i' % (k, v) for k, v in info.items()])
+                    print (u't=%i' % t) + infostr
                 env.render()
             if args.players == 1:
                 rew = [rew]
@@ -66,25 +67,25 @@ try:
                 totrew[i] += r
                 if verbosity > 0:
                     if r > 0:
-                        print('t=%i p=%i got reward: %g, current reward: %g' %
-                              (t, i, r, totrew[i]))
+                        print u't=%i p=%i got reward: %g, current reward: %g' %
+                              (t, i, r, totrew[i])
                     if r < 0:
-                        print('t=%i p=%i got penalty: %g, current reward: %g' %
-                              (t, i, r, totrew[i]))
+                        print u't=%i p=%i got penalty: %g, current reward: %g' %
+                              (t, i, r, totrew[i])
             if done:
                 env.render()
                 try:
                     if verbosity >= 0:
                         if args.players > 1:
-                            print("done! total reward: time=%i, reward=%r" %
-                                  (t, totrew))
+                            print u"done! total reward: time=%i, reward=%r" %
+                                  (t, totrew)
                         else:
-                            print("done! total reward: time=%i, reward=%d" %
-                                  (t, totrew[0]))
-                        input("press enter to continue")
-                        print()
+                            print u"done! total reward: time=%i, reward=%d" %
+                                  (t, totrew[0])
+                        raw_input(u"press enter to continue")
+                        print
                     else:
-                        input("")
+                        raw_input(u"")
                 except EOFError:
                     exit(0)
                 break
