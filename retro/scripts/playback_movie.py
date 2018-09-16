@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-from __future__ import with_statement
-from __future__ import division
-from __future__ import absolute_import
 import argparse
 import csv
 import json
@@ -14,8 +11,6 @@ import subprocess
 import sys
 import time
 from concurrent.futures import ProcessPoolExecutor as Executor
-from itertools import izip
-from io import open
 
 
 def playback_movie(emulator,
@@ -35,68 +30,68 @@ def playback_movie(emulator,
         shape=(0, emulator.num_buttons * movie.players), dtype=bool)
     if viewer or video_file:
         video = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        video.bind((u'127.0.0.1', 0))
+        video.bind(('127.0.0.1', 0))
         vr = video.getsockname()[1]
         input_vformat = [
-            u'-r',
-            unicode(emulator.em.get_screen_rate()), u'-s',
-            u'%dx%d' % emulator.observation_space.shape[1::-1], u'-pix_fmt',
-            u'rgb24', u'-f', u'rawvideo', u'-probesize', u'32',
-            u'-thread_queue_size', u'10000', u'-i',
-            u'tcp://127.0.0.1:%i?listen' % vr
+            '-r',
+            str(emulator.em.get_screen_rate()), '-s',
+            '%dx%d' % emulator.observation_space.shape[1::-1], '-pix_fmt',
+            'rgb24', '-f', 'rawvideo', '-probesize', '32',
+            '-thread_queue_size', '10000', '-i',
+            'tcp://127.0.0.1:%i?listen' % vr
         ]
         if record_audio:
             audio = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            audio.bind((u'127.0.0.1', 0))
+            audio.bind(('127.0.0.1', 0))
             ar = audio.getsockname()[1]
             input_aformat = [
-                u'-ar',
-                u'%i' % emulator.em.get_audio_rate(), u'-ac', u'2', u'-f', u's16le',
-                u'-probesize', u'32', u'-thread_queue_size', u'60', u'-i',
-                u'tcp://127.0.0.1:%i?listen' % ar
+                '-ar',
+                '%i' % emulator.em.get_audio_rate(), '-ac', '2', '-f', 's16le',
+                '-probesize', '32', '-thread_queue_size', '60', '-i',
+                'tcp://127.0.0.1:%i?listen' % ar
             ]
         else:
             audio = None
             ar = None
-            input_aformat = [u'-an']
+            input_aformat = ['-an']
         stdout = None
         output = []
         if video_file:
             if not lossless:
                 output = [
-                    u'-c:a', u'aac', u'-b:a', u'128k', u'-strict', u'-2', u'-c:v',
-                    u'libx264', u'-preset', u'slow', u'-crf', u'17', u'-f', u'mp4',
-                    u'-pix_fmt', u'yuv420p', video_file
+                    '-c:a', 'aac', '-b:a', '128k', '-strict', '-2', '-c:v',
+                    'libx264', '-preset', 'slow', '-crf', '17', '-f', 'mp4',
+                    '-pix_fmt', 'yuv420p', video_file
                 ]
-            elif lossless == u'mp4':
+            elif lossless == 'mp4':
                 output = [
-                    u'-c:a', u'aac', u'-b:a', u'192k', u'-strict', u'-2', u'-c:v',
-                    u'libx264', u'-preset', u'veryslow', u'-crf', u'0', u'-f', u'mp4',
-                    u'-pix_fmt', u'yuv444p', video_file
+                    '-c:a', 'aac', '-b:a', '192k', '-strict', '-2', '-c:v',
+                    'libx264', '-preset', 'veryslow', '-crf', '0', '-f', 'mp4',
+                    '-pix_fmt', 'yuv444p', video_file
                 ]
-            elif lossless == u'mp4rgb':
+            elif lossless == 'mp4rgb':
                 output = [
-                    u'-c:a', u'aac', u'-b:a', u'192k', u'-strict', u'-2', u'-c:v',
-                    u'libx264rgb', u'-preset', u'veryslow', u'-crf', u'0', u'-f',
-                    u'mp4', u'-pix_fmt', u'rgb24', video_file
+                    '-c:a', 'aac', '-b:a', '192k', '-strict', '-2', '-c:v',
+                    'libx264rgb', '-preset', 'veryslow', '-crf', '0', '-f',
+                    'mp4', '-pix_fmt', 'rgb24', video_file
                 ]
-            elif lossless == u'png':
+            elif lossless == 'png':
                 output = [
-                    u'-c:a', u'flac', u'-c:v', u'png', u'-pix_fmt', u'rgb24', u'-f',
-                    u'matroska', video_file
+                    '-c:a', 'flac', '-c:v', 'png', '-pix_fmt', 'rgb24', '-f',
+                    'matroska', video_file
                 ]
-            elif lossless == u'ffv1':
+            elif lossless == 'ffv1':
                 output = [
-                    u'-c:a', u'flac', u'-c:v', u'ffv1', u'-pix_fmt', u'bgr0', u'-f',
-                    u'matroska', video_file
+                    '-c:a', 'flac', '-c:v', 'ffv1', '-pix_fmt', 'bgr0', '-f',
+                    'matroska', video_file
                 ]
         if viewer:
             stdout = subprocess.PIPE
-            output = [u'-c', u'copy', u'-f', u'nut', u'pipe:1']
+            output = ['-c', 'copy', '-f', 'nut', 'pipe:1']
         ffmpeg_proc = subprocess.Popen(
             [
-                u'ffmpeg',
-                u'-y',
+                'ffmpeg',
+                '-y',
                 *input_vformat,  # Input params (video)
                 *input_aformat,  # Input params (audio)
                 *output
@@ -111,7 +106,7 @@ def playback_movie(emulator,
 
         time.sleep(0.3)
         try:
-            video.connect((u'127.0.0.1', vr))
+            video.connect(('127.0.0.1', vr))
         except ConnectionRefusedError:
             video.close()
             if audio:
@@ -119,12 +114,12 @@ def playback_movie(emulator,
             ffmpeg_proc.terminate()
             raise
         if viewer:
-            viewer_proc = subprocess.Popen([viewer, u'-'],
+            viewer_proc = subprocess.Popen([viewer, '-'],
                                            stdin=ffmpeg_proc.stdout)
     frames = 0
     score = [0] * movie.players
-    reward_fields = [u'r'] if movie.players == 1 else [
-        u'r%d' % i for i in xrange(movie.players)
+    reward_fields = ['r'] if movie.players == 1 else [
+        'r%d' % i for i in range(movie.players)
     ]
     wasDone = False
 
@@ -146,8 +141,8 @@ def playback_movie(emulator,
     while True:
         if movie.step():
             keys = []
-            for p in xrange(movie.players):
-                for i in xrange(emulator.num_buttons):
+            for p in range(movie.players):
+                for i in range(emulator.num_buttons):
                     keys.append(movie.get_key(i, p))
             if npy_file:
                 actions = np.vstack((actions, (keys, )))
@@ -159,61 +154,61 @@ def playback_movie(emulator,
         if info_file:
             info_steps.append(info)
         if movie.players > 1:
-            for p in xrange(movie.players):
+            for p in range(movie.players):
                 score[p] += reward[p]
         else:
             score[0] += reward
         frames += 1
         try:
-            if hasattr(signal, u'SIGCHLD'):
+            if hasattr(signal, 'SIGCHLD'):
                 signal.signal(signal.SIGCHLD, killprocs)
             if viewer_proc and viewer_proc.poll() is not None:
                 break
             if ffmpeg_proc and frames > video_delay:
-                video.sendall(str(display))
+                video.sendall(bytes(display))
                 if audio:
                     sound = emulator.em.get_audio()
                     if not audio_connected:
                         time.sleep(0.2)
-                        audio.connect((u'127.0.0.1', ar))
+                        audio.connect(('127.0.0.1', ar))
                         audio_connected = True
                     if len(sound):
-                        audio.sendall(str(sound))
+                        audio.sendall(bytes(sound))
         except BrokenPipeError:
             waitprocs()
             raise
         finally:
-            if hasattr(signal, u'SIGCHLD'):
+            if hasattr(signal, 'SIGCHLD'):
                 signal.signal(signal.SIGCHLD, signal.SIG_DFL)
         if done and not wasDone:
             if monitor_csv:
                 monitor_csv.writerow({
-                    **dict(izip(reward_fields, score)), u'l':
+                    **dict(zip(reward_fields, score)), 'l':
                     frames,
-                    u't':
+                    't':
                     frames / 60.0
                 })
             frames = 0
             score = [0] * movie.players
         wasDone = done
-    if hasattr(signal, u'SIGCHLD'):
+    if hasattr(signal, 'SIGCHLD'):
         signal.signal(signal.SIGCHLD, signal.SIG_DFL)
     if monitor_csv and frames:
         monitor_csv.writerow({
-            **dict(izip(reward_fields, score)), u'l': frames,
-            u't': frames / 60.0
+            **dict(zip(reward_fields, score)), 'l': frames,
+            't': frames / 60.0
         })
     if npy_file:
-        kwargs = {u'actions': actions}
+        kwargs = {'actions': actions}
         if info_file:
-            kwargs[u'info'] = info_steps
+            kwargs['info'] = info_steps
         try:
             np.savez_compressed(npy_file, **kwargs)
         except IOError:
             pass
     elif info_file:
         try:
-            with open(info_file, u'w') as f:
+            with open(info_file, 'w') as f:
                 json.dump(info_steps, f)
         except IOError:
             pass
@@ -242,18 +237,18 @@ def _play(movie, args, monitor_csv):
     video_file = None
     info_file = None
     npy_file = None
-    if args.lossless in (u'png', u'ffv1'):
-        ext = u'.mkv'
+    if args.lossless in ('png', 'ffv1'):
+        ext = '.mkv'
     else:
-        ext = u'.mp4'
+        ext = '.mp4'
 
     basename = os.path.splitext(movie)[0]
     if not args.no_video:
         video_file = basename + ext
     if args.info_dict:
-        info_file = basename + u'.json'
+        info_file = basename + '.json'
     if args.npy_actions:
-        npy_file = basename + u'.npz'
+        npy_file = basename + '.npz'
     while True:
         emulator = None
         try:
@@ -281,18 +276,18 @@ def _play(movie, args, monitor_csv):
 
 def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser()
-    parser.add_argument(u'movies', type=unicode, nargs=u'+')
+    parser.add_argument('movies', type=str, nargs='+')
     group = parser.add_mutually_exclusive_group()
-    group.add_argument(u'--jobs', u'-j', type=int, default=1)
-    group.add_argument(u'--csv-out', u'-c', type=unicode)
-    parser.add_argument(u'--ending', u'-e', type=int)
-    parser.add_argument(u'--viewer', u'-v', type=unicode)
-    parser.add_argument(u'--no-audio', u'-A', action=u'store_true')
-    parser.add_argument(u'--no-video', u'-V', action=u'store_true')
-    parser.add_argument(u'--info-dict', u'-i', action=u'store_true')
-    parser.add_argument(u'--npy-actions', u'-a', action=u'store_true')
+    group.add_argument('--jobs', '-j', type=int, default=1)
+    group.add_argument('--csv-out', '-c', type=str)
+    parser.add_argument('--ending', '-e', type=int)
+    parser.add_argument('--viewer', '-v', type=str)
+    parser.add_argument('--no-audio', '-A', action='store_true')
+    parser.add_argument('--no-video', '-V', action='store_true')
+    parser.add_argument('--info-dict', '-i', action='store_true')
+    parser.add_argument('--npy-actions', '-a', action='store_true')
     parser.add_argument(
-        u'--lossless', u'-L', type=unicode, choices=[u'mp4', u'mp4rgb', u'png', u'ffv1'])
+        '--lossless', '-L', type=str, choices=['mp4', 'mp4rgb', 'png', 'ffv1'])
     args = parser.parse_args(argv)
     monitor_csv = None
     monitor_file = None
@@ -302,25 +297,25 @@ def main(argv=sys.argv[1:]):
     if args.csv_out:
         m0 = retro.Movie(args.movies[0])
         game = m0.get_game()
-        reward_fields = [u'r'] if m0.players == 1 else [
-            u'r%d' % i for i in xrange(m0.players)
+        reward_fields = ['r'] if m0.players == 1 else [
+            'r%d' % i for i in range(m0.players)
         ]
-        monitor_file = open(args.csv_out, u'w')
+        monitor_file = open(args.csv_out, 'w')
         monitor_file.write(
-            u'#{"t_start": 0.0, "gym_version": "gym_retro", "env_id": "%s"}\n' %
+            '#{"t_start": 0.0, "gym_version": "gym_retro", "env_id": "%s"}\n' %
             game)
         monitor_csv = csv.DictWriter(
-            monitor_file, fieldnames=reward_fields + [u'l', u't'])
+            monitor_file, fieldnames=reward_fields + ['l', 't'])
         monitor_csv.writeheader()
 
     with Executor(args.jobs or None) as pool:
         list(
             pool.map(
                 _play,
-                *izip(*[(movie, args, monitor_csv) for movie in args.movies])))
+                *zip(*[(movie, args, monitor_csv) for movie in args.movies])))
     if monitor_file:
         monitor_file.close()
 
 
-if __name__ == u'__main__':
+if __name__ == '__main__':
     main()

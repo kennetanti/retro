@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-from __future__ import with_statement
-from __future__ import absolute_import
 import getpass
 import io
 import os
@@ -14,39 +12,39 @@ import zipfile
 
 
 def main():
-    username = raw_input(u'Steam Username: ')
-    password = getpass.getpass(u'Steam Password (leave blank if cached): ')
+    username = input('Steam Username: ')
+    password = getpass.getpass('Steam Password (leave blank if cached): ')
 
     if password:
-        password = password + u'\n'
+        password = password + '\n'
 
-        authcode = raw_input(u'Steam Guard code: ')
+        authcode = input('Steam Guard code: ')
         if authcode:
-            password = password + authcode + u'\n'
+            password = password + authcode + '\n'
         else:
-            password = password + u'\r\n'
+            password = password + '\r\n'
     else:
-        password = u'\r\n'
+        password = '\r\n'
 
     with tempfile.TemporaryDirectory() as dir:
-        if sys.platform.startswith(u'linux'):
+        if sys.platform.startswith('linux'):
             r = requests.get(
-                u'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz'
+                'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz'
             )
-            steamcmd = u'steamcmd.sh'
-        elif sys.platform.startswith(u'darwin'):
+            steamcmd = 'steamcmd.sh'
+        elif sys.platform.startswith('darwin'):
             r = requests.get(
-                u'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz'
+                'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz'
             )
-            steamcmd = u'steamcmd.sh'
-        elif sys.platform.startswith(u'win'):
+            steamcmd = 'steamcmd.sh'
+        elif sys.platform.startswith('win'):
             r = requests.get(
-                u'https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip'
+                'https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip'
             )
-            steamcmd = u'steamcmd.exe'
+            steamcmd = 'steamcmd.exe'
         else:
-            raise RuntimeError(u'Unknown platform %s' % sys.platform)
-        if sys.platform.startswith(u'win'):
+            raise RuntimeError('Unknown platform %s' % sys.platform)
+        if sys.platform.startswith('win'):
             zipf = zipfile.ZipFile(io.BytesIO(r.content))
             zipf.extractall(dir)
         else:
@@ -59,28 +57,28 @@ def main():
         with tempfile.TemporaryDirectory() as rom_install_dir:
             command = [
                 os.path.join(
-                    dir, steamcmd), u'+login', username, u'+force_install_dir',
-                rom_install_dir, u'+@sSteamCmdForcePlatformType', u'windows',
-                u'+app_update', u'34270', u'validate', u'+quit'
+                    dir, steamcmd), '+login', username, '+force_install_dir',
+                rom_install_dir, '+@sSteamCmdForcePlatformType', 'windows',
+                '+app_update', '34270', 'validate', '+quit'
             ]
 
-            print u'Downloading games...'
+            print('Downloading games...')
             output = subprocess.run(
                 command,
-                input=password.encode(u'utf-8'),
+                input=password.encode('utf-8'),
                 stdout=subprocess.PIPE)
             if output.returncode not in (0, 7):
-                stdout = output.stdout.decode(u'utf-8').split(u'\n')
-                print u'\n'.join([unicode(*stdout[-3:-1])])
+                stdout = output.stdout.decode('utf-8').split('\n')
+                print(*stdout[-3:-1], sep='\n')
                 sys.exit(1)
             roms = []
-            print u'Installing games...'
+            print('Installing games...')
             for base, _, files in os.walk(rom_install_dir):
-                if not base.endswith(u'uncompressed ROMs'):
+                if not base.endswith('uncompressed ROMs'):
                     continue
                 roms.extend([os.path.join(base, file) for file in files])
             retro.data.merge(*roms, quiet=False)
 
 
-if __name__ == u'__main__':
+if __name__ == '__main__':
     main()

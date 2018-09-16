@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from retro.testing import game, handle
 import retro.data
 import retro.testing.tools

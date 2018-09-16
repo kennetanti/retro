@@ -1,11 +1,10 @@
 # Logic copied from PEP 513
 
 
-from __future__ import absolute_import
 def is_manylinux1_compatible():
     # Only Linux, and only x86-64 / i686
     from distutils.util import get_platform
-    if get_platform() not in [u"linux-x86_64", u"linux-i686"]:
+    if get_platform() not in ["linux-x86_64", "linux-i686"]:
         return False
 
     # Check for presence of _manylinux module
@@ -35,11 +34,11 @@ def have_compatible_glibc(major, minimum_minor):
     gnu_get_libc_version.restype = ctypes.c_char_p
     version_str = gnu_get_libc_version()
     # py2 / py3 compatibility:
-    if not isinstance(version_str, unicode):
-        version_str = version_str.decode(u"ascii")
+    if not isinstance(version_str, str):
+        version_str = version_str.decode("ascii")
 
     # Parse string and check against requested version.
-    version = [int(piece) for piece in version_str.split(u".")]
+    version = [int(piece) for piece in version_str.split(".")]
     assert len(version) == 2
     if major != version[0]:
         return False
@@ -50,8 +49,8 @@ def have_compatible_glibc(major, minimum_minor):
 
 import sys
 if is_manylinux1_compatible():
-    print u"%s is manylinux1 compatible" % (sys.executable, )
+    print("%s is manylinux1 compatible" % (sys.executable, ))
     sys.exit(0)
 else:
-    print u"%s is NOT manylinux1 compatible" % (sys.executable, )
+    print("%s is NOT manylinux1 compatible" % (sys.executable, ))
     sys.exit(1)
