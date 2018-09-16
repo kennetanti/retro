@@ -9,7 +9,10 @@ import retro.data
 
 def load_whitelist(game, inttype):
     try:
-        with open(retro.data.get_file_path(game, 'metadata.json', inttype | retro.data.Integrations.STABLE)) as f:
+        with open(
+                retro.data.get_file_path(
+                    game, 'metadata.json',
+                    inttype | retro.data.Integrations.STABLE)) as f:
             whitelist = json.load(f).get('whitelist', {})
     except json.JSONDecodeError:
         return None, [(metadata_file, 'fail decode')]
@@ -21,15 +24,19 @@ def load_whitelist(game, inttype):
 def scan_missing():
     missing = []
     for game in retro.data.list_games(retro.data.Integrations.ALL):
-        if not retro.data.get_file_path(game, 'data.json', retro.data.Integrations.ALL):
+        if not retro.data.get_file_path(game, 'data.json',
+                                        retro.data.Integrations.ALL):
             missing.append((game, 'data.json'))
-        if not retro.data.get_file_path(game, 'scenario.json', retro.data.Integrations.ALL):
+        if not retro.data.get_file_path(game, 'scenario.json',
+                                        retro.data.Integrations.ALL):
             missing.append((game, 'scenario.json'))
-        if not retro.data.get_file_path(game, 'metadata.json', retro.data.Integrations.ALL):
+        if not retro.data.get_file_path(game, 'metadata.json',
+                                        retro.data.Integrations.ALL):
             missing.append((game, 'metadata.json'))
         if not retro.data.list_states(game, retro.data.Integrations.ALL):
             missing.append((game, '*.state'))
-        if not retro.data.get_file_path(game, 'rom.sha', retro.data.Integrations.ALL):
+        if not retro.data.get_file_path(game, 'rom.sha',
+                                        retro.data.Integrations.ALL):
             missing.append((game, 'rom.sha'))
     return missing
 
@@ -64,23 +71,36 @@ def verify_data(game, inttype, raw=None):
         if 'type' not in definition:
             errors.append((file, 'missing type for %s' % variable))
         else:
-            if not re.match(r'\|[dinu]1|(>[<=]?|<[>=]?|=[><]?)[dinu][2-8]', definition['type']):
-                errors.append((file, 'invalid type %s for %s' % (definition['type'], variable)))
-            elif re.match(r'([><=]{2}|=[><]|<[>=]|>[<=])[dinu][2-8]|[><=]{1,2}d[5-8]', definition['type']):
-                warnings.append((file, 'suspicious type %s for %s' % (definition['type'], variable)))
-    if 'lives' in data and data['lives'].get('type', '') not in ('|u1', '|i1', '|d1'):
-        warnings.append((file, 'suspicious type %s for lives' % data['lives']['type']))
-    if 'score' in data and (data['score'].get('type', '??')[1:] in ('u1', 'd1', 'n1', 'n2') or 'i' in data['score'].get('type', '')):
-        warnings.append((file, 'suspicious type %s for score' % data['score']['type']))
+            if not re.match(r'\|[dinu]1|(>[<=]?|<[>=]?|=[><]?)[dinu][2-8]',
+                            definition['type']):
+                errors.append((
+                    file,
+                    'invalid type %s for %s' % (definition['type'], variable)))
+            elif re.match(
+                    r'([><=]{2}|=[><]|<[>=]|>[<=])[dinu][2-8]|[><=]{1,2}d[5-8]',
+                    definition['type']):
+                warnings.append((file, 'suspicious type %s for %s' %
+                                 (definition['type'], variable)))
+    if 'lives' in data and data['lives'].get('type', '') not in ('|u1', '|i1',
+                                                                 '|d1'):
+        warnings.append(
+            (file, 'suspicious type %s for lives' % data['lives']['type']))
+    if 'score' in data and (data['score'].get('type', '??')[1:] in ('u1', 'd1',
+                                                                    'n1', 'n2')
+                            or 'i' in data['score'].get('type', '')):
+        warnings.append(
+            (file, 'suspicious type %s for score' % data['score']['type']))
 
     whitelist = {(file, w) for w in whitelist.get('data.json', [])}
     all_warnings = {(file, w) for (file, w) in warnings}
     warnings = list(all_warnings - whitelist)
-    errors.extend(('metadata.json', 'missing warning "%s: %s"' % (file, w)) for (file, w) in whitelist - all_warnings)
+    errors.extend(('metadata.json', 'missing warning "%s: %s"' % (file, w))
+                  for (file, w) in whitelist - all_warnings)
     return warnings, errors
 
 
-def verify_scenario(game, inttype, scenario='scenario', raw=None, dataraw=None):
+def verify_scenario(game, inttype, scenario='scenario', raw=None,
+                    dataraw=None):
     file = os.path.join(str(inttype), game, '%s.json' % scenario)
     path = retro.data.get_file_path(game, '%s.json' % scenario, inttype)
     if not path:
@@ -105,20 +125,28 @@ def verify_scenario(game, inttype, scenario='scenario', raw=None, dataraw=None):
             if 'variables' not in r and 'script' not in r:
                 warnings.append((file, 'missing reward in rewards[%d]' % i))
             elif 'variables' in r and 'script' in r:
-                warnings.append((file, 'both variables and script present in rewards[%d]' % i))
+                warnings.append(
+                    (file,
+                     'both variables and script present in rewards[%d]' % i))
         if 'reward' in scen:
             warnings.append((file, 'reward and rewards both present'))
-    elif 'reward' not in scen or ('variables' not in scen['reward'] and 'script' not in scen['reward']):
+    elif 'reward' not in scen or ('variables' not in scen['reward']
+                                  and 'script' not in scen['reward']):
         warnings.append((file, 'missing reward'))
     elif 'variables' in scen['reward'] and 'script' in scen['reward']:
         warnings.append((file, 'both variables and script present in reward'))
 
-    if 'done' not in scen or ('variables' not in scen['done'] and 'script' not in scen['done'] and 'nodes' not in scen['done']):
+    if 'done' not in scen or ('variables' not in scen['done']
+                              and 'script' not in scen['done']
+                              and 'nodes' not in scen['done']):
         warnings.append((file, 'missing done'))
 
     try:
         if not dataraw:
-            datafile = retro.data.get_file_path(game, 'data.json', inttype=inttype | retro.data.Integrations.STABLE)
+            datafile = retro.data.get_file_path(
+                game,
+                'data.json',
+                inttype=inttype | retro.data.Integrations.STABLE)
             with open(datafile) as f:
                 data = json.load(f)
         else:
@@ -136,39 +164,58 @@ def verify_scenario(game, inttype, scenario='scenario', raw=None, dataraw=None):
                 if 'reward' not in definition and 'penalty' not in definition:
                     errors.append((file, 'blank reward %s' % variable))
         if done and 'variables' in done:
-            if 'score'in done['variables']:
-                warnings.append((file, 'suspicious variable in done condition: score'))
-            if 'health' in done['variables'] and 'lives' in done['variables'] and 'condition' not in done:
-                warnings.append((file, 'suspicious done condition: health OR lives'))
-            if done.get('condition', 'any') == 'all' and (len(done['variables']) + len(done.get('nodes', {}))) < 2:
-                errors.append((file, 'incorrect done condition all with only 1 check'))
-            if done.get('condition', 'any') == 'any' and (len(done['variables']) + len(done.get('nodes', {}))) > 2:
-                warnings.append((file, 'suspicious done condition any with more than 2 checks'))
+            if 'score' in done['variables']:
+                warnings.append(
+                    (file, 'suspicious variable in done condition: score'))
+            if 'health' in done['variables'] and 'lives' in done[
+                    'variables'] and 'condition' not in done:
+                warnings.append((file,
+                                 'suspicious done condition: health OR lives'))
+            if done.get('condition', 'any') == 'all' and (
+                    len(done['variables']) + len(done.get('nodes', {}))) < 2:
+                errors.append(
+                    (file, 'incorrect done condition all with only 1 check'))
+            if done.get('condition', 'any') == 'any' and (
+                    len(done['variables']) + len(done.get('nodes', {}))) > 2:
+                warnings.append(
+                    (file,
+                     'suspicious done condition any with more than 2 checks'))
             for variable, definition in done['variables'].items():
                 if 'op' not in definition:
-                    errors.append((file, 'invalid done condition %s' % variable))
+                    errors.append((file,
+                                   'invalid done condition %s' % variable))
                 elif definition.get('reference', 0) == 0:
                     if 'op' in ('equal', 'negative-equal'):
-                        warnings.append((file, 'incorrect op: zero for %s' % variable))
+                        warnings.append(
+                            (file, 'incorrect op: zero for %s' % variable))
                     elif 'op' == 'not-equal':
-                        warnings.append((file, 'incorrect op: nonzero for %s' % variable))
+                        warnings.append(
+                            (file, 'incorrect op: nonzero for %s' % variable))
                     elif 'op' == 'less-than':
-                        warnings.append((file, 'incorrect op: negative for %s' % variable))
+                        warnings.append(
+                            (file, 'incorrect op: negative for %s' % variable))
                     elif 'op' == 'greater-than':
-                        warnings.append((file, 'incorrect op: positive for %s' % variable))
+                        warnings.append(
+                            (file, 'incorrect op: positive for %s' % variable))
                 if data:
                     if variable not in data:
                         errors.append((file, 'invalid variable %s' % variable))
                     else:
-                        if 'i' not in data[variable].get('type', '') and definition.get('op', '') == 'negative' and definition.get('measurement') != 'delta':
-                            errors.append((file, 'op: negative on unsigned %s' % variable))
+                        if 'i' not in data[variable].get(
+                                'type', '') and definition.get(
+                                    'op', '') == 'negative' and definition.get(
+                                        'measurement') != 'delta':
+                            errors.append(
+                                (file,
+                                 'op: negative on unsigned %s' % variable))
     except (json.JSONDecodeError, IOError):
         pass
 
     whitelist = {(file, w) for w in whitelist.get(os.path.split(file)[-1], [])}
     all_warnings = {(file, w) for (file, w) in warnings}
     warnings = list(all_warnings - whitelist)
-    errors.extend(('metadata.json', 'missing warning "%s: %s"' % (file, w)) for (file, w) in whitelist - all_warnings)
+    errors.extend(('metadata.json', 'missing warning "%s: %s"' % (file, w))
+                  for (file, w) in whitelist - all_warnings)
     return warnings, errors
 
 
@@ -192,7 +239,8 @@ def verify_default_state(game, inttype, raw=None):
     state = metadata.get('default_state')
     if not state:
         return [], [(file, 'default state missing')]
-    if state not in retro.data.list_states(game, inttype | retro.data.Integrations.STABLE):
+    if state not in retro.data.list_states(
+            game, inttype | retro.data.Integrations.STABLE):
         errors.append((file, 'invalid default state %s' % state))
 
     return [], errors
@@ -202,7 +250,8 @@ def verify_hash_collisions():
     errors = []
     seen_hashes = {}
     for game in retro.data.list_games(retro.data.Integrations.ALL):
-        shafile = retro.data.get_file_path(game, 'rom.sha', retro.data.Integrations.ALL)
+        shafile = retro.data.get_file_path(game, 'rom.sha',
+                                           retro.data.Integrations.ALL)
         try:
             with open(os.path.join(shafile, 'rom.sha')) as f:
                 expected_shas = f.read().strip().split('\n')
