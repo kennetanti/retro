@@ -28,19 +28,13 @@ def main():
 
     with tempfile.TemporaryDirectory() as dir:
         if sys.platform.startswith('linux'):
-            r = requests.get(
-                'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz'
-            )
+            r = requests.get('https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz')
             steamcmd = 'steamcmd.sh'
         elif sys.platform.startswith('darwin'):
-            r = requests.get(
-                'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz'
-            )
+            r = requests.get('https://steamcdn-a.akamaihd.net/client/installer/steamcmd_osx.tar.gz')
             steamcmd = 'steamcmd.sh'
         elif sys.platform.startswith('win'):
-            r = requests.get(
-                'https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip'
-            )
+            r = requests.get('https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip')
             steamcmd = 'steamcmd.exe'
         else:
             raise RuntimeError('Unknown platform %s' % sys.platform)
@@ -55,18 +49,15 @@ def main():
         # force_install_dir, and will instead install in the
         # default steam directory
         with tempfile.TemporaryDirectory() as rom_install_dir:
-            command = [
-                os.path.join(
-                    dir, steamcmd), '+login', username, '+force_install_dir',
-                rom_install_dir, '+@sSteamCmdForcePlatformType', 'windows',
-                '+app_update', '34270', 'validate', '+quit'
-            ]
+            command = [os.path.join(dir, steamcmd),
+                       '+login', username,
+                       '+force_install_dir', rom_install_dir,
+                       '+@sSteamCmdForcePlatformType', 'windows',
+                       '+app_update', '34270', 'validate',
+                       '+quit']
 
             print('Downloading games...')
-            output = subprocess.run(
-                command,
-                input=password.encode('utf-8'),
-                stdout=subprocess.PIPE)
+            output = subprocess.run(command, input=password.encode('utf-8'), stdout=subprocess.PIPE)
             if output.returncode not in (0, 7):
                 stdout = output.stdout.decode('utf-8').split('\n')
                 print(*stdout[-3:-1], sep='\n')

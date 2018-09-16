@@ -1,6 +1,5 @@
 # Logic copied from PEP 513
 
-
 def is_manylinux1_compatible():
     # Only Linux, and only x86-64 / i686
     from distutils.util import get_platform
@@ -17,7 +16,6 @@ def is_manylinux1_compatible():
 
     # Check glibc version. CentOS 5 uses glibc 2.5.
     return have_compatible_glibc(2, 5)
-
 
 def have_compatible_glibc(major, minimum_minor):
     import ctypes
@@ -46,11 +44,10 @@ def have_compatible_glibc(major, minimum_minor):
         return False
     return True
 
-
 import sys
 if is_manylinux1_compatible():
-    print("%s is manylinux1 compatible" % (sys.executable, ))
+    print("%s is manylinux1 compatible" % (sys.executable,))
     sys.exit(0)
 else:
-    print("%s is NOT manylinux1 compatible" % (sys.executable, ))
+    print("%s is NOT manylinux1 compatible" % (sys.executable,))
     sys.exit(1)
