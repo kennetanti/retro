@@ -23,6 +23,7 @@ def processpool():
             return [], [(args[0], 'subprocess crashed')]
         except TimeoutError:
             return [], [(args[0], 'task timed out')]
+
     yield run
     pool.shutdown()
 
@@ -46,11 +47,14 @@ def state(game, inttype):
     if not states:
         return [], []
 
-    rom = retro.data.get_romfile_path(game, inttype | retro.data.Integrations.STABLE)
+    rom = retro.data.get_romfile_path(game,
+                                      inttype | retro.data.Integrations.STABLE)
     emu = retro.RetroEmulator(rom)
     for statefile in states:
         try:
-            with gzip.open(retro.data.get_file_path(game, statefile + '.state', inttype), 'rb') as fh:
+            with gzip.open(
+                    retro.data.get_file_path(game, statefile + '.state',
+                                             inttype), 'rb') as fh:
                 state = fh.read()
         except (IOError, zlib.error):
             errors.append((game, 'state failed to decode: %s' % statefile))

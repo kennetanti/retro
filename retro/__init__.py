@@ -5,7 +5,6 @@ import sys
 from enum import Enum
 from retro._retro import Movie, RetroEmulator, core_path
 
-
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 core_path(os.path.join(os.path.dirname(__file__), 'cores'))
 
@@ -17,7 +16,10 @@ for path in ('VERSION.txt', '../VERSION'):
     except IOError:
         pass
 
-__all__ = ['Movie', 'RetroEmulator', 'Actions', 'State', 'get_core_path', 'get_romfile_system', 'get_system_info', 'make']
+__all__ = [
+    'Movie', 'RetroEmulator', 'Actions', 'State', 'get_core_path',
+    'get_romfile_system', 'get_system_info', 'make'
+]
 
 retro.data.init_core_info(core_path())
 
@@ -53,7 +55,10 @@ def get_system_info(system):
         raise KeyError("Unsupported system type: {}".format(system))
 
 
-def make(game, state=State.DEFAULT, inttype=retro.data.Integrations.DEFAULT, **kwargs):
+def make(game,
+         state=State.DEFAULT,
+         inttype=retro.data.Integrations.DEFAULT,
+         **kwargs):
     from retro.retro_env import RetroEnv
     try:
         retro.data.get_romfile_path(game, inttype)
@@ -61,5 +66,7 @@ def make(game, state=State.DEFAULT, inttype=retro.data.Integrations.DEFAULT, **k
         if not retro.data.get_file_path(game, "rom.sha", inttype):
             raise
         else:
-            raise FileNotFoundError('Game not found: %s. Did you make sure to import the ROM?' % game)
+            raise FileNotFoundError(
+                'Game not found: %s. Did you make sure to import the ROM?' %
+                game)
     return RetroEnv(game, state, inttype=inttype, **kwargs)
